@@ -1,15 +1,15 @@
 ﻿using System.Text.Json.Serialization;
-using EnumStringValues;
+using IrGateways.Assets;
 
 namespace IrGateways.Zarinpal;
 
 public enum Currency
 {
-    [StringValue("IRR")] Rial,
-    [StringValue("IRT")] Toman
+    IRR,
+    IRT
 }
 
-internal record RequestDto(
+internal record CreateDto(
     [property: JsonPropertyName("merchant_id")] string MerchantId,
     [property: JsonPropertyName("amount")] ulong Amount,
     [property: JsonPropertyName("currency")] string? Currency,
@@ -23,11 +23,11 @@ internal record RequestDto(
 public enum FeeType
 {
     Merchant,
-    Customer //TODO: naming this like api returned value name
+    Payer
 }
 
-public record ZarinpalCreateResultDto(short Code, string Message, string Authority, FeeType FeeType, int Fee,
-    string Url);
+public record ZarinpalCreateResult(short Code, string Message, string Authority, FeeType FeeType, int Fee,
+    string RedirectUrl);
 
 internal record VerifyDto(
     [property: JsonPropertyName("merchant_id")] string MerchantId,
@@ -35,4 +35,15 @@ internal record VerifyDto(
     [property: JsonPropertyName("authority")] string? Authority
 );
 
-public record ZarinpalVerifyResultDto(short Code,long RefId,string CardPan,string CardHash,FeeType FeeType,int Fee);
+public record ZarinpalVerifyResult(short Code,long RefId,string CardPan,string CardHash,FeeType FeeType,int Fee);
+
+internal record UnVerifiedDto(
+    [property: JsonPropertyName("merchant_id")] string MerchantId
+);
+public record UnVerifiedAuthority(
+    [property: JsonPropertyName("authority")] string Authority,
+    [property: JsonPropertyName("amount")] ulong Amount,
+    [property: JsonPropertyName("callback_url")] string CallbackUrl,
+    [property: JsonPropertyName("referer")]string Referer,
+    [property: JsonPropertyName("date"),JsonConverter(typeof(IsoTimeJsonConverter))] DateTime Date
+);
