@@ -42,17 +42,18 @@ public class NextpayClient
                 customData,
                 payerName,
                 description,
-                autoVerify.ToString(),
+                autoVerify?.ToStringValue(),
                 allowedCard
             );
             request.AddJsonBody(body);
             var result = await client.PostAsync<CreateResponseDto>(request);
-            if (result.Code is not 0)
-            {
-                throw new IrGatewaysException($"nextpay gateway create is failure. Error code is : {result.Code} " +
-                                              $" please visit the https://nextpay.org/nx/docs#step-7 for more information ",
-                    result.Code);
-            }
+            
+            if (!IsCreateSuccessful(result.Code))
+                throw new IrGatewaysException(
+                    $"nextpay gateway create is failure. Error code is : {result.Code} " +
+                    $" please visit the https://nextpay.org/nx/docs#step-7 for more information ",
+                    result.Code
+                );
 
             return new NextpayCreateResult(result.Code, result.TransId,
                 $"https://nextpay.org/nx/gateway/payment/{result.TransId}");
@@ -62,4 +63,72 @@ public class NextpayClient
             throw new IrGatewaysException(e.Message, 1);
         }
     }
+
+    public async Task<NextpayVerifyResult> VerifyAsync(string transId, ulong amount, Currency? currency = null)
+    {
+        try
+        {
+            var client = new RestClient(CreateUrl);
+            var request = new RestRequest();
+            var body = new VerifyDto(
+                _apiKey,
+                transId,
+                amount,
+                currency.ToString()
+            );
+            request.AddJsonBody(body);
+            var result = await client.PostAsync<NextpayVerifyResult>(request);
+
+            if (!IsVerifySuccessful(result.Code))
+                throw new IrGatewaysException(
+                    $"nextpay gateway verify is failure. Error code is : {result.Code} " +
+                    $" please visit the https://nextpay.org/nx/docs#step-7 for more information ",
+                    result.Code
+                );
+
+            return result;
+        }
+        catch (Exception e)
+        {
+            throw new IrGatewaysException(e.Message, 1);
+        }
+    }
+
+    public async Task<NextpayRefundResult> RefundAsync(string transId,ulong amount)
+    {
+        try
+        {
+            var client = new RestClient(CreateUrl);
+            var request = new RestRequest();
+            var body = new RefundDto(
+                _apiKey,
+                transId,
+                amount
+            );
+            request.AddJsonBody(body);
+            var result = await client.PostAsync<NextpayRefundResult>(request);
+            
+            if (!IsRefundSuccessful(result.Code))
+                throw new IrGatewaysException(
+                    $"nextpay gateway refund is failure. Error code is : {result.Code} " +
+                    $" please visit the https://nextpay.org/nx/docs#step-7 for more information ",
+                    result.Code
+                );
+            
+            return result;
+        }
+        catch (Exception e)
+        {
+            throw new IrGatewaysException(e.Message, 1);
+        }
+    }
+
+    private static bool IsCreateSuccessful(short resultCode)
+        => resultCode is -1;
+    
+    private static bool IsVerifySuccessful(short resultCode)
+        => resultCode is 0;
+
+    private static bool IsRefundSuccessful(short resultCode)
+        => resultCode is -90;
 }

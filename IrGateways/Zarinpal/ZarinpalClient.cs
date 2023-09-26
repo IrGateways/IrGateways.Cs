@@ -7,7 +7,7 @@ namespace IrGateways.Zarinpal;
 public class ZarinpalClient
 {
     private readonly string _merchantId;
-    
+
     public ZarinpalClient(string merchantId)
     {
         if (merchantId.Length != 36)
@@ -17,6 +17,7 @@ public class ZarinpalClient
     }
 
     private const string CreateUrl = "https://api.zarinpal.com/pg/v4/payment/request.json";
+
     public async Task<ZarinpalCreateResult> CreateAsync(
         string callbackUrl,
         ulong amount,
@@ -44,7 +45,7 @@ public class ZarinpalClient
             var response = await client.PostAsync(request);
 
             var resultNode = GetResultNodeFromResponseContent(response.Content);
-            CheckHasError(resultNode,"create");
+            CheckHasError(resultNode, "create");
 
             var data = GetDataNode(resultNode);
 
@@ -64,6 +65,7 @@ public class ZarinpalClient
     }
 
     private const string VerifyUrl = "https://api.zarinpal.com/pg/v4/payment/verify.json";
+
     public async Task<ZarinpalVerifyResult> VerifyAsync(ulong amount, string authority)
     {
         try
@@ -79,8 +81,8 @@ public class ZarinpalClient
             var response = await client.PostAsync(request);
 
             var resultNode = GetResultNodeFromResponseContent(response.Content);
-            CheckHasError(resultNode,"verify");
-            
+            CheckHasError(resultNode, "verify");
+
             var data = GetDataNode(resultNode);
 
             return new ZarinpalVerifyResult(
@@ -99,6 +101,7 @@ public class ZarinpalClient
     }
 
     private const string UnverifiedUrl = "https://api.zarinpal.com/pg/v4/payment/unVerified.json";
+
     public async Task<List<UnVerifiedAuthority>> GetUnverifiedAuthoritiesAsync()
     {
         try
@@ -110,7 +113,7 @@ public class ZarinpalClient
             var response = await client.PostAsync(request);
 
             var resultNode = GetResultNodeFromResponseContent(response.Content);
-            CheckHasError(resultNode,"unverified");
+            CheckHasError(resultNode, "unverified");
 
             var data = GetDataNode(resultNode);
 
@@ -121,7 +124,7 @@ public class ZarinpalClient
             throw new IrGatewaysException(e.Message, 1);
         }
     }
-    
+
     private static FeeType GetFeeTypeAsEnum(string feeTypeString)
     {
         return feeTypeString == "Merchant" ? FeeType.Merchant : FeeType.Payer;
@@ -133,7 +136,7 @@ public class ZarinpalClient
     /// <param name="resultNode">api response to get error results and check it</param>
     /// <param name="methodName">that method cuz this error happening to show request method name in the exception message</param>
     /// <exception cref="IrGatewaysException"></exception>
-    private static void CheckHasError(JsonNode resultNode,string methodName)
+    private static void CheckHasError(JsonNode resultNode, string methodName)
     {
         var errorsNode = GetErrorsNode(resultNode);
         if (errorsNode is not JsonArray) //when it's not null and there is an error
@@ -148,6 +151,7 @@ public class ZarinpalClient
 
     private static JsonNode GetResultNodeFromResponseContent(string responseContent)
         => JsonNode.Parse(responseContent);
+
     private static JsonNode GetErrorsNode(JsonNode resultNode)
         => resultNode["errors"];
 

@@ -40,6 +40,7 @@ public record ZarinpalVerifyResult(short Code,long RefId,string CardPan,string C
 internal record UnVerifiedDto(
     [property: JsonPropertyName("merchant_id")] string MerchantId
 );
+
 public record UnVerifiedAuthority(
     [property: JsonPropertyName("authority")] string Authority,
     [property: JsonPropertyName("amount")] ulong Amount,
